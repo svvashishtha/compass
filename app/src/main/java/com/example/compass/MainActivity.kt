@@ -4,7 +4,9 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.hardware.*
+import android.hardware.SensorManager.*
 import android.os.Bundle
+import android.util.Log
 import android.view.animation.Animation
 import android.view.animation.RotateAnimation
 import android.widget.ImageView
@@ -19,8 +21,6 @@ import java.util.*
 
 
 class MainActivity : AppCompatActivity(), SensorEventListener {
-
-
     private var textViewMagneticDeclination: TextView? = null
     private var textViewHeading: TextView? = null
     private var textViewTrueHeading: TextView? = null
@@ -55,19 +55,19 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         // initialize your android device sensor capabilities
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
 
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         //check if we have permission to access location
         if (ContextCompat.checkSelfPermission(
                         this, Manifest.permission.ACCESS_FINE_LOCATION) ==
                 PackageManager.PERMISSION_GRANTED) {
             //fine location permission already granted
-            getLocation();
+            getLocation()
         } else {
             //if permission is not granted, request location permissions from user
             ActivityCompat.requestPermissions(this,
                     arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                    REQUEST_PERMISSION_FINE_LOCATION);
+                    REQUEST_PERMISSION_FINE_LOCATION)
         }
     }
 
@@ -75,7 +75,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_PERMISSION_FINE_LOCATION) {
             //if request is cancelled, the result arrays are empty.
-            if (grantResults.size > 0 &&
+            if (grantResults.isNotEmpty() &&
                     grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 //permission is granted
                 getLocation()
@@ -95,7 +95,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                         latitude = location.latitude.toFloat()
                         longitude = location.longitude.toFloat()
                         altitude = location.altitude.toFloat()
-                        magneticDeclination = calculateMagneticDeclination(latitude, longitude, altitude)
+                        magneticDeclination =
+                            CompassHelper.calculateMagneticDeclination(latitude, longitude, altitude)
                         textViewMagneticDeclination?.text = getString(R.string.magnetic_declination, magneticDeclination)
                     }
                 }
@@ -103,68 +104,37 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-
+        when(accuracy)
+        {
+            SENSOR_STATUS_ACCURACY_HIGH ->
+                Log.d(TAG, sensor.toString() + "Accuracy changed : SENSOR_STATUS_ACCURACY_HIGH")
+            SENSOR_STATUS_ACCURACY_MEDIUM ->
+                Log.d(TAG, sensor.toString() + "Accuracy changed : SENSOR_STATUS_ACCURACY_MEDIUM")
+            SENSOR_STATUS_ACCURACY_LOW ->
+                Log.d(TAG, sensor.toString() + "Accuracy changed : SENSOR_STATUS_ACCURACY_LOW")
+             SENSOR_STATUS_NO_CONTACT ->
+                Log.d(TAG, sensor.toString() + "Accuracy changed : SENSOR_STATUS_NO_CONTACT")
+            SENSOR_STATUS_UNRELIABLE ->
+                Log.d(TAG, sensor.toString() + "Accuracy changed : SENSOR_STATUS_UNRELIABLE")
+        }
     }
 
     override fun onSensorChanged(event: SensorEvent?) {
         if (event?.sensor?.type == Sensor.TYPE_ACCELEROMETER) {
             //make sensor readings smoother using a low pass filter
-            lowPassFilter(event.values.clone(), accelerometerReading);
+            lowPassFilter(event.values.clone(), accelerometerReading)
         } else if (event?.sensor?.type == Sensor.TYPE_MAGNETIC_FIELD) {
             //make sensor readings smoother using a low pass filter
-            lowPassFilter(event.values.clone(), magnetometerReading);
+            lowPassFilter(event.values.clone(), magnetometerReading)
         }
         updateHeading()
 
     }
 
-    fun calculateHeading(accelerometerReading: FloatArray, magnetometerReading: FloatArray): Float {
-        var Ax = accelerometerReading[0]
-        var Ay = accelerometerReading[1]
-        var Az = accelerometerReading[2]
-        val Ex = magnetometerReading[0]
-        val Ey = magnetometerReading[1]
-        val Ez = magnetometerReading[2]
-
-        //cross product of the magnetic field vector and the gravity vector
-        var Hx = Ey * Az - Ez * Ay
-        var Hy = Ez * Ax - Ex * Az
-        var Hz = Ex * Ay - Ey * Ax
-
-        //normalize the values of resulting vector
-        val invH = 1.0f / Math.sqrt(Hx * Hx + Hy * Hy + (Hz * Hz).toDouble()).toFloat()
-        Hx *= invH
-        Hy *= invH
-        Hz *= invH
-
-        //normalize the values of gravity vector
-        val invA = 1.0f / Math.sqrt(Ax * Ax + Ay * Ay + (Az * Az).toDouble()).toFloat()
-        Ax *= invA
-        Ay *= invA
-        Az *= invA
-
-        //cross product of the gravity vector and the new vector H
-        val Mx = Ay * Hz - Az * Hy
-        val My = Az * Hx - Ax * Hz
-        val Mz = Ax * Hy - Ay * Hx
-
-        //arctangent to obtain heading in radians
-        return Math.atan2(Hy.toDouble(), My.toDouble()).toFloat()
-    }
-
-
-    fun convertRadtoDeg(rad: Float): Float {
-        return (rad / Math.PI).toFloat() * 180
-    }
-
-    //map angle from [-180,180] range to [0,360] range
-    fun map180to360(angle: Float): Float {
-        return (angle + 360) % 360
-    }
 
     //0 ≤ ALPHA ≤ 1
     //smaller ALPHA results in smoother sensor data but slower updates
-    val ALPHA = 0.15f
+    private val ALPHA = 0.15f
 
     private fun lowPassFilter(input: FloatArray, output: FloatArray?): FloatArray? {
         if (output == null) return input
@@ -174,22 +144,18 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         return output
     }
 
-    fun calculateMagneticDeclination(latitude: Float, longitude: Float, altitude: Float): Float {
-        return GeomagneticField(latitude, longitude, altitude, System.currentTimeMillis()).declination
-    }
-
     override fun onResume() {
         super.onResume()
         val accelerometer: Sensor? = sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
         if (accelerometer != null) {
             sensorManager?.registerListener(this, accelerometer,
-                    SensorManager.SENSOR_DELAY_GAME, SensorManager.SENSOR_DELAY_GAME)
+                    SENSOR_DELAY_GAME, SENSOR_DELAY_GAME)
         }
 
         val magneticField: Sensor? = sensorManager?.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
         if (magneticField != null) {
             sensorManager?.registerListener(this, magneticField,
-                    SensorManager.SENSOR_DELAY_GAME, SensorManager.SENSOR_DELAY_GAME)
+                    SENSOR_DELAY_GAME, SENSOR_DELAY_GAME)
         }
 
     }
@@ -197,9 +163,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private fun updateHeading() {
         //oldHeading required for image rotate animation
         oldHeading = heading
-        heading = calculateHeading(accelerometerReading, magnetometerReading)
-        heading = convertRadtoDeg(heading)
-        heading = map180to360(heading)
+        heading = CompassHelper.calculateHeading(accelerometerReading, magnetometerReading)
+        heading = CompassHelper.convertRadtoDeg(heading)
+        heading = CompassHelper.map180to360(heading)
         if (isLocationRetrieved) {
             trueHeading = heading + magneticDeclination
             if (trueHeading > 360) { //if trueHeading was 362 degrees for example, it should be adjusted to be 2 degrees instead
@@ -217,7 +183,11 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     override fun onPause() {
         super.onPause()
 
-        sensorManager?.unregisterListener(this);
+        sensorManager?.unregisterListener(this)
+    }
+
+    companion object {
+        const val TAG = "Sensor_MainActivity"
     }
 
 }
