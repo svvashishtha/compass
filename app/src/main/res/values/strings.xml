@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">compass</string>
+    <string name="location_error_msg">Location not found</string>
+    <string name="heading">Heading : %1$d</string>
+    <string name="true_heading">True heading : %1$d</string>
+    <string name="magnetic_declination">Declination : %1$f</string>
+</resources>
