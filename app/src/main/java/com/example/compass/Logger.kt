@@ -1,0 +1,17 @@
+package com.example.compass
+
+import android.util.Log
+import timber.log.Timber
+
+class Logger {
+    companion object {
+        fun log(tag: String, message: String) {
+            Timber.d(message)
+        }
+
+        fun eLog(tag: String, message: String) {
+            Timber.e(message)
+        }
+
+    }
+}

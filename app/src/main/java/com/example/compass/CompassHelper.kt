@@ -6,7 +6,10 @@ import kotlin.math.sqrt
 
 class CompassHelper {
     companion object {
-        fun calculateHeading(accelerometerReading: FloatArray, magnetometerReading: FloatArray): Float {
+        fun calculateHeading(
+            accelerometerReading: FloatArray,
+            magnetometerReading: FloatArray
+        ): Double {
             var Ax = accelerometerReading[0]
             var Ay = accelerometerReading[1]
             var Az = accelerometerReading[2]
@@ -37,20 +40,29 @@ class CompassHelper {
             val Mz = Ax * Hy - Ay * Hx
 
             //arctangent to obtain heading in radians
-            return atan2(Hy.toDouble(), My.toDouble()).toFloat()
+            return atan2(Hy.toDouble(), My.toDouble())
         }
 
-        fun convertRadtoDeg(rad: Float): Float {
-            return (rad / Math.PI).toFloat() * 180
+        fun convertRadtoDeg(rad: Double): Double {
+            return (rad / Math.PI) * 180
         }
 
         //map angle from [-180,180] range to [0,360] range
-        fun map180to360(angle: Float): Float {
+        fun map180to360(angle: Double): Double {
             return (angle + 360) % 360
         }
 
-        fun calculateMagneticDeclination(latitude: Float, longitude: Float, altitude: Float): Float {
-            return GeomagneticField(latitude, longitude, altitude, System.currentTimeMillis()).declination
+        fun calculateMagneticDeclination(
+            latitude: Double,
+            longitude: Double,
+            altitude: Double
+        ): Double {
+            return GeomagneticField(
+                latitude.toFloat(),
+                longitude.toFloat(),
+                altitude.toFloat(),
+                System.currentTimeMillis()
+            ).declination.toDouble()
         }
     }
 }

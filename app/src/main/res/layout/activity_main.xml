@@ -4,13 +4,16 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/color_yellow"
+    android:background="@color/surface_color"
     tools:context=".MainActivity">
+
 
     <LinearLayout
         android:id="@+id/linear_layout_values"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/dimen_8dp"
+        android:layout_marginEnd="@dimen/dimen_8dp"
         app:layout_constraintBottom_toTopOf="@+id/image_compass"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
@@ -23,7 +26,9 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:textStyle="bold" />
+            android:textColor="@color/text_color"
+            android:textStyle="bold"
+            tools:text="000" />
 
         <TextView
             android:id="@+id/text_view_heading"
@@ -31,7 +36,9 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:textStyle="bold" />
+            android:textColor="@color/text_color"
+            android:textStyle="bold"
+            tools:text="000" />
 
         <TextView
             android:id="@+id/text_view_true_heading"
@@ -39,20 +46,320 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
-            android:textStyle="bold" />
+            android:textColor="@color/text_color"
+            android:textStyle="bold"
+            tools:text="000" />
 
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/gps_coordinates"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/dimen_8dp"
+        android:layout_marginEnd="@dimen/dimen_8dp"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toTopOf="@id/image_compass"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/linear_layout_values">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/latitude"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textColor="@color/text_color"
+                android:textStyle="bold"
+                tools:text="000" />
+
+            <TextView
+                android:id="@+id/longitude"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textColor="@color/text_color"
+                android:textStyle="bold"
+                tools:text="000" />
+
+            <TextView
+                android:id="@+id/altitude"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textColor="@color/text_color"
+                android:textStyle="bold"
+                tools:text="000" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/speed"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textColor="@color/text_color"
+                android:textStyle="bold"
+                tools:text="000" />
+
+            <TextView
+                android:id="@+id/accuracy"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textColor="@color/text_color"
+                android:textStyle="bold"
+                tools:text="000" />
+
+            <TextView
+                android:id="@+id/time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textColor="@color/text_color"
+                android:textStyle="bold"
+                tools:text="000" />
+        </LinearLayout>
     </LinearLayout>
 
     <ImageView
         android:id="@+id/image_compass"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
         android:adjustViewBounds="true"
         android:src="@drawable/img_compass"
+        app:layout_constraintBottom_toTopOf="@id/sensor_accuracy"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/gps_coordinates"
+        app:layout_constraintWidth_percent="0.8"
+        app:tint="@color/text_color" />
+
+
+    <LinearLayout
+        android:id="@+id/sensor_accuracy"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/dimen_8dp"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toTopOf="@id/debug_values"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/image_compass">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/sensor_accuracy"
+            android:textColor="@color/text_color" />
+
+        <TextView
+            android:id="@+id/accelerometer_accuracy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textColor="@color/text_color"
+            android:textStyle="bold"
+            tools:text="000" />
+
+        <TextView
+            android:id="@+id/magnetometer_accuracy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textColor="@color/text_color"
+            android:textStyle="bold"
+            tools:text="000" />
+
+        <TextView
+            android:id="@+id/gyroscope_accuracy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textColor="@color/text_color"
+            android:textStyle="bold"
+            tools:text="000" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/activity_recognition"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/dimen_8dp"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toTopOf="@id/debug_values"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/sensor_accuracy">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/activity_recognition"
+            android:textColor="@color/text_color" />
+
+        <TextView
+            android:id="@+id/activity_exit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textColor="@color/text_color"
+            android:textStyle="bold"
+            tools:text="Exit" />
+
+        <TextView
+            android:id="@+id/activity_entry"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textColor="@color/text_color"
+            android:textStyle="bold"
+            tools:text="Entry" />
+
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/debug_values"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/dimen_8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/linear_layout_values"
-        app:layout_constraintWidth_percent="0.8" />
+        app:layout_constraintTop_toBottomOf="@id/sensor_accuracy"
+        app:layout_constraintVertical_chainStyle="spread">
+
+        <LinearLayout
+            android:id="@+id/accelerometer_values"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/accelerometer"
+                android:textColor="@color/text_color" />
+
+            <TextView
+                android:id="@+id/ax"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textColor="@color/text_color"
+                android:textStyle="bold"
+                tools:text="000" />
+
+            <TextView
+                android:id="@+id/ay"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textColor="@color/text_color"
+                android:textStyle="bold"
+                tools:text="000" />
+
+            <TextView
+                android:id="@+id/az"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textColor="@color/text_color"
+                android:textStyle="bold"
+                tools:text="000" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/magnetometer_values"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/magnetometer"
+                android:textColor="@color/text_color" />
+
+            <TextView
+                android:id="@+id/mx"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textColor="@color/text_color"
+                android:textStyle="bold"
+                tools:text="000" />
+
+            <TextView
+                android:id="@+id/my"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textColor="@color/text_color"
+                android:textStyle="bold"
+                tools:text="000" />
+
+            <TextView
+                android:id="@+id/mz"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textColor="@color/text_color"
+                android:textStyle="bold"
+                tools:text="000" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/gyroscope_values"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/gyroscope"
+                android:textColor="@color/text_color" />
+
+            <TextView
+                android:id="@+id/gx"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textColor="@color/text_color"
+                android:textStyle="bold"
+                tools:text="000" />
+
+            <TextView
+                android:id="@+id/gy"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textColor="@color/text_color"
+                android:textStyle="bold"
+                tools:text="000" />
+
+            <TextView
+                android:id="@+id/gz"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textColor="@color/text_color"
+                android:textStyle="bold"
+                tools:text="000" />
+        </LinearLayout>
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
