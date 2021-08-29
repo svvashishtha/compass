@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name">compass</string>
     <string name="location_error_msg">Location not found</string>
-    <string name="heading">Heading : %1$d</string>
-    <string name="true_heading">True heading : %1$d</string>
+    <string name="heading">Heading : %1$f</string>
+    <string name="true_heading">True heading : %1$f</string>
     <string name="magnetic_declination">Declination : %1$f</string>
     <string name="accelerometer">Accelerometer</string>
     <string name="magnetometer">Magnetometer</string>
@@ -37,5 +37,9 @@
     <string name="speed">Speed : %1$f</string>
     <string name="accuracy">Accuracy : %1$f</string>
     <string name="time">Time : %1$s</string>
-    <string name="storage_permission_deneid">Storage permission deneid</string>
+    <string name="storage_permission_deneid">Storage permission denied</string>
+    <string name="channel_name">My Custom channel</string>
+    <string name="channel_description">My channel\'s description</string>
+    <string name="start_recording">Start recording</string>
+    <string name="stop_service">Stop recording</string>
 </resources>

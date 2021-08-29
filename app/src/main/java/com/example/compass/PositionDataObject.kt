@@ -12,6 +12,7 @@ data class PositionDataObject(
     val time: Long,
     val declination: Double,
     val heading: Double,
+    val oldHeading: Double,
     val trueHeading: Double,
     val acceleroMeterAccuracy: String,
     val magnetoMeterAccuracy: String,
