@@ -31,6 +31,11 @@ import java.util.*
 
 
 class MainActivity : AppCompatActivity() {
+    /**
+    * dataRecordingRequested is true when "Start recording" is clicked
+     * but Service is not already running. So we start the service and
+     * then start recording when service binds with activity*/
+    private var dataRecordingRequested: Boolean = false
     private val REQUEST_PERMISSION_FINE_LOCATION: Int = 203
     private val REQUEST_PERMISSION_ACTIVTY_RECOGNITION: Int = 204
     private val REQUEST_ENABLE_LOCATION: Int = 205
@@ -47,15 +52,17 @@ class MainActivity : AppCompatActivity() {
             val binder: MyService.LocalBinder = service as MyService.LocalBinder
             mService = binder.getService()
             mBound = true
-            if (mService?.isForeGroundService == false) {
+            if (dataRecordingRequested){
                 bringServiceToForeground()
-            }
-            mService?.liveDataPositionObject?.observe(this@MainActivity,
-                { positionDataObject ->
-                    updateUi(positionDataObject)
+                mService?.liveDataPositionObject?.observe(this@MainActivity,
+                    { positionDataObject ->
+                        updateUi(positionDataObject)
 
-                })
-            binding?.toggleService?.text = getString(R.string.stop_service)
+                    })
+
+                binding?.toggleService?.text = getString(R.string.stop_service)
+            }
+
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
@@ -73,23 +80,60 @@ class MainActivity : AppCompatActivity() {
 
 
         binding?.toggleService?.setOnClickListener {
-            val intent = Intent(this@MainActivity, MyService::class.java)
-            if (mBound) {
-
-                intent.action = MyService.STOP_SERVICE
-                binding?.toggleService?.text = getString(R.string.start_recording)
-            } else {
-                intent.action = MyService.START_SERVICE
-                binding?.toggleService?.text = getString(R.string.stop_service)
+            if (mBound)
+            {
+                if (mService?.isForeGroundService == false) {
+                    startRecording()
+                }else{
+                    stopRecording()
+                }
+            }else{
+                setUpService()
+                dataRecordingRequested = true
             }
-
-            startService(intent)
-
         }
+        setUpService()
+    }
+
+    /**
+     * 1. Tells @MyService to start as foreground service.
+     * 2. Sets up ui to listen to @PositionDataObject
+     * 3 Updates text on button
+    * */
+    private fun startRecording() {
+        bringServiceToForeground()
+        mService?.liveDataPositionObject?.observe(this@MainActivity,
+            { positionDataObject ->
+                updateUi(positionDataObject)
+            })
+        binding?.toggleService?.text = getString(R.string.stop_service)
+    }
+
+    /**
+     * Sends an intent to stop service.
+     * Updates text on button
+    * */
+    private fun stopRecording() {
+        val intent = Intent(this@MainActivity, MyService::class.java)
+        intent.action = MyService.STOP_SERVICE
+        startService(intent)
+        binding?.toggleService?.text = getString(R.string.start_recording)
+    }
+
+    /**
+    * Starts the service and calls bindWithService()
+     * */
+    private fun setUpService() {
+        val intent = Intent(this@MainActivity, MyService::class.java)
+        intent.action = MyService.START_SERVICE
+        startService(intent)
         bindWithService()
     }
 
 
+    /**
+     * Binds with MyService
+    * */
     private fun bindWithService() {
         val intent = Intent(this, MyService::class.java)
         bindService(intent, connection, BIND_IMPORTANT)

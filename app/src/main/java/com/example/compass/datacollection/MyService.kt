@@ -187,6 +187,15 @@ class MyService : Service(), SensorEventListener {
     }
 
     private fun startRecordingSensorData() {
+        registerAsSensorListener()
+        getLocation()
+        setUpActivityTransition()
+        Timber.plant(FileLoggingTree(this))
+        handler.post(loggingRunnable)
+
+    }
+
+    private fun registerAsSensorListener() {
         val accelerometer: Sensor? = sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
         if (accelerometer != null) {
             sensorManager?.registerListener(
@@ -209,11 +218,6 @@ class MyService : Service(), SensorEventListener {
                 SensorManager.SENSOR_DELAY_GAME, SensorManager.SENSOR_DELAY_UI
             )
         }
-        getLocation()
-        setUpActivityTransition()
-        Timber.plant(FileLoggingTree(this))
-        handler.post(loggingRunnable)
-
     }
 
     private fun showToast(message: String) {
@@ -262,7 +266,7 @@ class MyService : Service(), SensorEventListener {
         }
     }
 
-    private fun stopService() {
+    fun stopService() {
         showToast("Service stopping")
         try {
             stopForeground(true)
