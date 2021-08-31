@@ -1,4 +1,4 @@
-package com.example.compass
+package com.example.compass.datacollection.objects
 
 import kotlinx.serialization.Serializable
 

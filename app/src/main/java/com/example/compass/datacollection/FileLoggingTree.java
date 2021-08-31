@@ -1,4 +1,4 @@
-package com.example.compass;
+package com.example.compass.datacollection;
 
 import android.content.Context;
 import android.util.Log;
@@ -14,7 +14,6 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.html.HTMLLayout;
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.encoder.LayoutWrappingEncoder;
 import ch.qos.logback.core.rolling.RollingFileAppender;
 import ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP;
 import ch.qos.logback.core.rolling.TimeBasedRollingPolicy;
@@ -40,7 +39,7 @@ public class FileLoggingTree extends Timber.DebugTree {
         RollingFileAppender<ILoggingEvent> rollingFileAppender = new RollingFileAppender<>();
         rollingFileAppender.setContext(loggerContext);
         rollingFileAppender.setAppend(true);
-        rollingFileAppender.setFile(logDirectory + "/" + LOG_PREFIX + "-latest.html");
+        rollingFileAppender.setFile(logDirectory + "/" + LOG_PREFIX + "-latest.txt");
 
         SizeAndTimeBasedFNATP<ILoggingEvent> fileNamingPolicy = new SizeAndTimeBasedFNATP<>();
         fileNamingPolicy.setContext(loggerContext);
@@ -48,7 +47,7 @@ public class FileLoggingTree extends Timber.DebugTree {
 
         TimeBasedRollingPolicy<ILoggingEvent> rollingPolicy = new TimeBasedRollingPolicy<>();
         rollingPolicy.setContext(loggerContext);
-        rollingPolicy.setFileNamePattern(logDirectory + "/" + LOG_PREFIX + ".%d{yyyy-MM-dd}.%i.html");
+        rollingPolicy.setFileNamePattern(logDirectory + "/" + LOG_PREFIX + ".%d{yyyy-MM-dd}.%i.txt");
         rollingPolicy.setMaxHistory(30);
         rollingPolicy.setTimeBasedFileNamingAndTriggeringPolicy(fileNamingPolicy);
         rollingPolicy.setParent(rollingFileAppender);  // parent and context required!

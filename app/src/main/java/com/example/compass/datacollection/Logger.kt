@@ -1,4 +1,4 @@
-package com.example.compass
+package com.example.compass.datacollection
 
 import android.util.Log
 import timber.log.Timber

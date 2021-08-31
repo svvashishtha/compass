@@ -1,4 +1,4 @@
-package com.example.compass
+package com.example.compass.datacollection.helpers
 
 import com.google.android.gms.location.ActivityTransition
 import com.google.android.gms.location.DetectedActivity

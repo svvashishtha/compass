@@ -42,4 +42,5 @@
     <string name="channel_description">My channel\'s description</string>
     <string name="start_recording">Start recording</string>
     <string name="stop_service">Stop recording</string>
+    <string name="share_logs">Share logs</string>
 </resources>

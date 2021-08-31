@@ -1,4 +1,4 @@
-package com.example.compass
+package com.example.compass.datacollection.helpers
 
 import android.hardware.GeomagneticField
 import kotlin.math.atan2

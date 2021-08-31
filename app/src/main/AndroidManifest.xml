@@ -20,7 +20,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Compass">
 
-        <activity android:name=".MainActivity">
+        <activity android:name=".ui.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -28,9 +28,21 @@
             </intent-filter>
         </activity>
         <service
-            android:name=".MyService"
+            android:name=".datacollection.MyService"
             android:enabled="true"
             android:exported="true" />
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.example.compass.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+            android:name="android.support.FILE_PROVIDER_PATHS"
+            android:resource="@xml/file_paths" />
+
+        </provider>
+
     </application>
 
 </manifest>

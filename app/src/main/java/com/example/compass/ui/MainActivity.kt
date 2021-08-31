@@ -1,4 +1,4 @@
-package com.example.compass
+package com.example.compass.ui
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -7,15 +7,25 @@ import android.content.pm.PackageManager
 import android.hardware.SensorManager.*
 import android.os.*
 import android.util.Log
+import android.view.*
 import android.view.animation.Animation
 import android.view.animation.RotateAnimation
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.app.ShareCompat.IntentBuilder
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
+import com.example.compass.*
+import com.example.compass.R
 import com.example.compass.databinding.ActivityMainBinding
+import com.example.compass.datacollection.FileLoggingTree
+import com.example.compass.datacollection.MyService
+import com.example.compass.datacollection.objects.PositionDataObject
+import com.example.compass.ui.permission.PermissionUtils
 import com.google.android.gms.location.*
 import timber.log.Timber
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -37,7 +47,9 @@ class MainActivity : AppCompatActivity() {
             val binder: MyService.LocalBinder = service as MyService.LocalBinder
             mService = binder.getService()
             mBound = true
-            bringServiceToForeground()
+            if (mService?.isForeGroundService == false) {
+                bringServiceToForeground()
+            }
             mService?.liveDataPositionObject?.observe(this@MainActivity,
                 { positionDataObject ->
                     updateUi(positionDataObject)
@@ -72,8 +84,9 @@ class MainActivity : AppCompatActivity() {
             }
 
             startService(intent)
-            bindWithService()
+
         }
+        bindWithService()
     }
 
 
@@ -210,7 +223,11 @@ class MainActivity : AppCompatActivity() {
                 }
                 if (permission == Manifest.permission.WRITE_EXTERNAL_STORAGE) {
                     if (grantResults[index] == PackageManager.PERMISSION_GRANTED) {
-                        Timber.plant(FileLoggingTree(this))
+                        Timber.plant(
+                            FileLoggingTree(
+                                this
+                            )
+                        )
                     } else {
                         Toast.makeText(
                             this,
@@ -312,6 +329,56 @@ class MainActivity : AppCompatActivity() {
                 Log.d(TAG, "Service is already in foreground")
             }
         } ?: Log.d(TAG, "Service is null")
+
+    }
+
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        val inflater: MenuInflater = menuInflater
+        inflater.inflate(R.menu.main_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.share_logs -> {
+                shareLogs()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+
+
+    }
+
+    private fun shareLogs() {
+        val logDirectoryPath: String = getExternalFilesDir(null).toString() + "/logs"
+        val logsDirectory = File(logDirectoryPath)
+        if (logsDirectory.isDirectory) {
+            val logFiles = logsDirectory.listFiles()
+            if (logFiles != null && logFiles.isNotEmpty()) {
+                startFileShareIntent(logFiles)
+            }
+        }
+    }
+
+    fun startFileShareIntent(files: Array<File>?) {
+        val shareIntent = IntentBuilder(this)
+        shareIntent.setType("*/*")
+        if (files != null) {
+            for (logFile in files) {
+                val fileURI = FileProvider.getUriForFile(
+                    this@MainActivity, "$packageName.fileprovider",
+                    logFile
+                )
+                shareIntent.addStream(fileURI)
+            }
+            val intent = shareIntent.intent
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            startActivity(Intent.createChooser(intent, "Choose..."))
+        } else {
+            Toast.makeText(this, "No log files found", Toast.LENGTH_LONG).show()
+        }
 
     }
 }

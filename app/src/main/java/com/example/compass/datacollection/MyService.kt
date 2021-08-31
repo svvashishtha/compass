@@ -1,4 +1,4 @@
-package com.example.compass
+package com.example.compass.datacollection
 
 import android.annotation.SuppressLint
 import android.app.*
@@ -8,14 +8,16 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import android.os.*
-import android.telephony.ServiceState
 import android.util.Log
-import android.view.animation.Animation
-import android.view.animation.RotateAnimation
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.MutableLiveData
+import com.example.compass.datacollection.helpers.CompassHelper
+import com.example.compass.datacollection.objects.PositionDataObject
+import com.example.compass.R
+import com.example.compass.datacollection.helpers.Utils
+import com.example.compass.ui.MainActivity
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.*
 import com.google.android.gms.tasks.Task
@@ -75,19 +77,9 @@ class MyService : Service(), SensorEventListener {
                 for (event in result.transitionEvents) {
                     when (event.transitionType) {
                         ActivityTransition.ACTIVITY_TRANSITION_EXIT -> {
-                            /*binding?.activityExit?.text = String.format(
-                                "%2s : %1s",
-                                Utils.toActivityString(event.activityType),
-                                Utils.toTransitionType(event.transitionType)
-                            )*/
                             lastActivity = Utils.toActivityString(event.activityType) ?: "Unknown"
                         }
                         ActivityTransition.ACTIVITY_TRANSITION_ENTER -> {
-                            /*binding?.activityEntry?.text = String.format(
-                                "%2s : %1s",
-                                Utils.toActivityString(event.activityType),
-                                Utils.toTransitionType(event.transitionType)
-                            )*/
                             currentActivity =
                                 Utils.toActivityString(event.activityType) ?: "Unknown"
                         }
@@ -106,16 +98,24 @@ class MyService : Service(), SensorEventListener {
     private val locationCallback: LocationCallback = object : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult?) {
             if (locationResult == null) return
-            locationResult.lastLocation.let { location -> // Got last known location. In some rare situations this can be null.
-                isLocationRetrieved = true
-                latitude = location.latitude
-                longitude = location.longitude
-                altitude = location.altitude
-                speed = location.speed.toDouble()
-                loicationTime = location.time
-                locationAccuracy = location.accuracy.toDouble()
-                magneticDeclination =
-                    CompassHelper.calculateMagneticDeclination(latitude, longitude, altitude)
+            locationResult.locations.let { locations -> // Got last known location. In some rare situations this can be null.
+                if (locations.size > 0) {
+                    locations.last()?.let { location ->
+                        isLocationRetrieved = true
+                        latitude = location.latitude
+                        longitude = location.longitude
+                        altitude = location.altitude
+                        speed = location.speed.toDouble()
+                        loicationTime = location.time
+                        locationAccuracy = location.accuracy.toDouble()
+                        magneticDeclination =
+                            CompassHelper.calculateMagneticDeclination(
+                                latitude,
+                                longitude,
+                                altitude
+                            )
+                    }
+                }
             }
         }
 
@@ -183,7 +183,7 @@ class MyService : Service(), SensorEventListener {
                 showToast(intentAction ?: "Empty action intent")
             }
         }
-        return super.onStartCommand(intent, flags, startId)
+        return START_REDELIVER_INTENT
     }
 
     private fun startRecordingSensorData() {
@@ -347,17 +347,7 @@ class MyService : Service(), SensorEventListener {
                 trueHeading -= 360
             }
         }
-        //TODO send this rotation data to activity
-        val rotateAnimation = RotateAnimation(
-            -oldHeading.toFloat(),
-            -heading.toFloat(),
-            Animation.RELATIVE_TO_SELF,
-            0.5f,
-            Animation.RELATIVE_TO_SELF,
-            0.5f
-        )
-        rotateAnimation.duration = 500
-        rotateAnimation.fillAfter = true
+        liveDataPositionObject.value = getDataObjectFromCurrentValues()
     }
 
     //0 ≤ ALPHA ≤ 1
@@ -518,7 +508,6 @@ class MyService : Service(), SensorEventListener {
 
     fun logCurrentData() {
         Logger.log(MainActivity.TAG, format.encodeToString(getDataObjectFromCurrentValues()))
-        liveDataPositionObject.value = getDataObjectFromCurrentValues()
     }
 
     private fun getDataObjectFromCurrentValues(): PositionDataObject {

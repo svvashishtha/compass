@@ -1,4 +1,4 @@
-package com.example.compass
+package com.example.compass.ui.permission
 
 import android.Manifest
 import android.os.Build
