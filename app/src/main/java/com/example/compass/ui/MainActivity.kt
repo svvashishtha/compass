@@ -20,6 +20,7 @@ import com.example.compass.*
 import com.example.compass.R
 import com.example.compass.databinding.ActivityMainBinding
 import com.example.compass.datacollection.FileLoggingTree
+import com.example.compass.datacollection.Logger
 import com.example.compass.datacollection.MyService
 import com.example.compass.datacollection.objects.PositionDataObject
 import com.example.compass.ui.permission.PermissionUtils
@@ -32,7 +33,7 @@ import java.util.*
 
 class MainActivity : AppCompatActivity() {
     /**
-    * dataRecordingRequested is true when "Start recording" is clicked
+     * dataRecordingRequested is true when "Start recording" is clicked
      * but Service is not already running. So we start the service and
      * then start recording when service binds with activity*/
     private var dataRecordingRequested: Boolean = false
@@ -52,16 +53,17 @@ class MainActivity : AppCompatActivity() {
             val binder: MyService.LocalBinder = service as MyService.LocalBinder
             mService = binder.getService()
             mBound = true
-            if (dataRecordingRequested){
+            if (dataRecordingRequested || mService?.isForeGroundService == true) {
                 bringServiceToForeground()
-                mService?.liveDataPositionObject?.observe(this@MainActivity,
-                    { positionDataObject ->
-                        updateUi(positionDataObject)
-
-                    })
 
                 binding?.toggleService?.text = getString(R.string.stop_service)
             }
+            mService?.liveDataPositionObject?.observe(this@MainActivity,
+                { positionDataObject ->
+                    updateUi(positionDataObject)
+
+                })
+
 
         }
 
@@ -80,14 +82,13 @@ class MainActivity : AppCompatActivity() {
 
 
         binding?.toggleService?.setOnClickListener {
-            if (mBound)
-            {
+            if (mBound) {
                 if (mService?.isForeGroundService == false) {
                     startRecording()
-                }else{
+                } else {
                     stopRecording()
                 }
-            }else{
+            } else {
                 setUpService()
                 dataRecordingRequested = true
             }
@@ -99,29 +100,29 @@ class MainActivity : AppCompatActivity() {
      * 1. Tells @MyService to start as foreground service.
      * 2. Sets up ui to listen to @PositionDataObject
      * 3 Updates text on button
-    * */
+     * */
     private fun startRecording() {
         bringServiceToForeground()
-        mService?.liveDataPositionObject?.observe(this@MainActivity,
-            { positionDataObject ->
-                updateUi(positionDataObject)
-            })
         binding?.toggleService?.text = getString(R.string.stop_service)
     }
 
     /**
      * Sends an intent to stop service.
      * Updates text on button
-    * */
+     * */
     private fun stopRecording() {
-        val intent = Intent(this@MainActivity, MyService::class.java)
-        intent.action = MyService.STOP_SERVICE
-        startService(intent)
+        if (mBound) {
+            mService?.goBackGround()
+        } else {
+            val intent = Intent(this@MainActivity, MyService::class.java)
+            intent.action = MyService.STOP_SERVICE
+            startService(intent)
+        }
         binding?.toggleService?.text = getString(R.string.start_recording)
     }
 
     /**
-    * Starts the service and calls bindWithService()
+     * Starts the service and calls bindWithService()
      * */
     private fun setUpService() {
         val intent = Intent(this@MainActivity, MyService::class.java)
@@ -133,7 +134,7 @@ class MainActivity : AppCompatActivity() {
 
     /**
      * Binds with MyService
-    * */
+     * */
     private fun bindWithService() {
         val intent = Intent(this, MyService::class.java)
         bindService(intent, connection, BIND_IMPORTANT)
@@ -370,9 +371,9 @@ class MainActivity : AppCompatActivity() {
                 ContextCompat.startForegroundService(this, intent)
                 mService!!.doForegroundThings()
             } else {
-                Log.d(TAG, "Service is already in foreground")
+                Logger.log(TAG, "Service is already in foreground")
             }
-        } ?: Log.d(TAG, "Service is null")
+        } ?:Logger.log(TAG, "Service is null")
 
     }
 

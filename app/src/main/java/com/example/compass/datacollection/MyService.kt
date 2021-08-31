@@ -71,7 +71,6 @@ class MyService : Service(), SensorEventListener {
             if (ActivityTransitionResult.hasResult(intent)) {
                 val result = ActivityTransitionResult.extractResult(intent)!!
                 Logger.log(
-                    MainActivity.TAG,
                     "Received broadcast with activity recognition result = $result"
                 )
                 for (event in result.transitionEvents) {
@@ -88,7 +87,6 @@ class MyService : Service(), SensorEventListener {
 
             } else {
                 Logger.log(
-                    MainActivity.TAG,
                     "Received broadcast with no activity recognition result"
                 )
             }
@@ -114,6 +112,17 @@ class MyService : Service(), SensorEventListener {
                                 longitude,
                                 altitude
                             )
+                        /**
+                         * If service is in foreground then data logging has been requested.
+                         * */
+                        if (isForeGroundService) {
+                            logCurrentData()
+                        } else {
+                            Logger.log(
+                                TAG,
+                                format.encodeToString(getDataObjectFromCurrentValues()),
+                            )
+                        }
                     }
                 }
             }
@@ -125,18 +134,8 @@ class MyService : Service(), SensorEventListener {
     private var transitionEnabled = false
     private var myPendingIntent: PendingIntent? = null
     private val transitions = mutableListOf<ActivityTransition>()
-    val format = Json { allowSpecialFloatingPointValues = true }
-    var handler: Handler = Handler(Looper.getMainLooper())
-    public val liveDataPositionObject = MutableLiveData<PositionDataObject>()
-    private val loggingRunnable: Runnable = object : Runnable {
-        override fun run() {
-            // Do something here on the main thread
-            logCurrentData()
-            // Repeat this the same runnable code block again another 2 seconds
-            // 'this' is referencing the Runnable object
-            handler.postDelayed(this, 500)
-        }
-    }
+    private val format = Json { allowSpecialFloatingPointValues = true }
+    val liveDataPositionObject = MutableLiveData<PositionDataObject>()
 
     inner class LocalBinder : Binder() {
         fun getService(): MyService = this@MyService
@@ -166,6 +165,9 @@ class MyService : Service(), SensorEventListener {
         when (intentAction) {
             START_SERVICE -> {
                 showToast("Service started")
+                registerAsSensorListener()
+                getLocation()
+                setUpActivityTransition()
             }
             STOP_SERVICE -> {
                 stopService()
@@ -173,7 +175,6 @@ class MyService : Service(), SensorEventListener {
                 removeActivityRecognitionUpdates()
                 fusedLocationClient?.removeLocationUpdates(locationCallback)
                 unregisterReceiver(activityTransitionBroadcastReceiver)
-                handler.removeCallbacks(loggingRunnable)
             }
             FOREGROUND_SERVICE -> {
                 doForegroundThings()
@@ -187,11 +188,8 @@ class MyService : Service(), SensorEventListener {
     }
 
     private fun startRecordingSensorData() {
-        registerAsSensorListener()
-        getLocation()
-        setUpActivityTransition()
+
         Timber.plant(FileLoggingTree(this))
-        handler.post(loggingRunnable)
 
     }
 
@@ -277,6 +275,16 @@ class MyService : Service(), SensorEventListener {
         }
     }
 
+    fun goBackGround() {
+        showToast("Service going in background")
+        try {
+            stopForeground(true)
+            isForeGroundService = false
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
     override fun onSensorChanged(event: SensorEvent?) {
         when (event?.sensor?.type) {
             Sensor.TYPE_ACCELEROMETER -> {
@@ -299,27 +307,22 @@ class MyService : Service(), SensorEventListener {
         when (accuracy) {
             SensorManager.SENSOR_STATUS_ACCURACY_HIGH ->
                 Logger.log(
-                    MainActivity.TAG,
                     sensor.toString() + "Accuracy changed : SENSOR_STATUS_ACCURACY_HIGH"
                 )
             SensorManager.SENSOR_STATUS_ACCURACY_MEDIUM ->
                 Logger.log(
-                    MainActivity.TAG,
                     sensor.toString() + "Accuracy changed : SENSOR_STATUS_ACCURACY_MEDIUM"
                 )
             SensorManager.SENSOR_STATUS_ACCURACY_LOW ->
                 Logger.log(
-                    MainActivity.TAG,
                     sensor.toString() + "Accuracy changed : SENSOR_STATUS_ACCURACY_LOW"
                 )
             SensorManager.SENSOR_STATUS_NO_CONTACT ->
                 Logger.log(
-                    MainActivity.TAG,
                     sensor.toString() + "Accuracy changed : SENSOR_STATUS_NO_CONTACT"
                 )
             SensorManager.SENSOR_STATUS_UNRELIABLE ->
                 Logger.log(
-                    MainActivity.TAG,
                     sensor.toString() + "Accuracy changed : SENSOR_STATUS_UNRELIABLE"
                 )
         }
@@ -452,13 +455,13 @@ class MyService : Service(), SensorEventListener {
 
                 task.addOnSuccessListener {
                     // Handle success
-                    Logger.log(MainActivity.TAG, "Activity recognition update registration success")
+                    Logger.log("Activity recognition update registration success")
                     transitionEnabled = true
                 }
 
                 task.addOnFailureListener { e: Exception ->
-                    Logger.log(MainActivity.TAG, "Activity recognition update registration failed")
-                    Logger.log(MainActivity.TAG, e.toString())
+                    Logger.log("Activity recognition update registration failed")
+                    Logger.log(e.toString())
                 }
             }
         }
@@ -490,7 +493,7 @@ class MyService : Service(), SensorEventListener {
             }
 
             task.addOnFailureListener { e: Exception ->
-                Logger.log(MainActivity.TAG, "Activity recognition updates de-registration failed")
+                Logger.log("Activity recognition updates de-registration failed")
                 Logger.eLog(MainActivity.TAG, e.message ?: "Unknown error")
             }
         }
@@ -500,7 +503,6 @@ class MyService : Service(), SensorEventListener {
     override fun onDestroy() {
         super.onDestroy()
         try {
-            handler.removeCallbacks(loggingRunnable)
             sensorManager?.unregisterListener(this)
             removeActivityRecognitionUpdates()
             fusedLocationClient?.removeLocationUpdates(locationCallback)
@@ -511,7 +513,7 @@ class MyService : Service(), SensorEventListener {
     }
 
     fun logCurrentData() {
-        Logger.log(MainActivity.TAG, format.encodeToString(getDataObjectFromCurrentValues()))
+        Logger.log(format.encodeToString(getDataObjectFromCurrentValues()))
     }
 
     private fun getDataObjectFromCurrentValues(): PositionDataObject {
