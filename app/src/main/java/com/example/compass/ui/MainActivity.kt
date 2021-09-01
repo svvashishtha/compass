@@ -4,9 +4,9 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.*
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.hardware.SensorManager.*
 import android.os.*
-import android.util.Log
 import android.view.*
 import android.view.animation.Animation
 import android.view.animation.RotateAnimation
@@ -16,6 +16,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.ShareCompat.IntentBuilder
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.lifecycle.ViewModelProvider
 import com.example.compass.*
 import com.example.compass.R
 import com.example.compass.databinding.ActivityMainBinding
@@ -24,6 +25,12 @@ import com.example.compass.datacollection.Logger
 import com.example.compass.datacollection.MyService
 import com.example.compass.datacollection.objects.PositionDataObject
 import com.example.compass.ui.permission.PermissionUtils
+import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.components.YAxis
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import com.google.android.gms.location.*
 import timber.log.Timber
 import java.io.File
@@ -41,6 +48,8 @@ class MainActivity : AppCompatActivity() {
     private val REQUEST_PERMISSION_ACTIVTY_RECOGNITION: Int = 204
     private val REQUEST_ENABLE_LOCATION: Int = 205
     private var binding: ActivityMainBinding? = null
+    private var viewModel: SensorDataViewModel? = null
+
     private val runningQOrLater = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
     var mService: MyService? = null
     var mBound = false
@@ -49,6 +58,7 @@ class MainActivity : AppCompatActivity() {
             className: ComponentName,
             service: IBinder
         ) {
+            Logger.log(TAG, " in onServiceConnected")
             // We've bound to MyService, cast the IBinder and get MyService instance
             val binder: MyService.LocalBinder = service as MyService.LocalBinder
             mService = binder.getService()
@@ -58,13 +68,12 @@ class MainActivity : AppCompatActivity() {
 
                 binding?.toggleService?.text = getString(R.string.stop_service)
             }
-            mService?.liveDataPositionObject?.observe(this@MainActivity,
+            mService?.liveDataPositionObject?.let { viewModel?.setLiveDataObject(it) }
+            viewModel?.liveDataPositionObject?.removeObservers(this@MainActivity)
+            viewModel?.liveDataPositionObject?.observe(this@MainActivity,
                 { positionDataObject ->
                     updateUi(positionDataObject)
-
                 })
-
-
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
@@ -77,10 +86,10 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
 
         setContentView(binding?.root!!)
-
+        binding?.context = this
+        binding?.lifecycleOwner = this
         requestRequiredPermissions()
-
-
+        setupViewModel()
         binding?.toggleService?.setOnClickListener {
             if (mBound) {
                 if (mService?.isForeGroundService == false) {
@@ -93,7 +102,37 @@ class MainActivity : AppCompatActivity() {
                 dataRecordingRequested = true
             }
         }
-        setUpService()
+
+
+    }
+
+    private fun setUpChart(xPlot: LineChart?) {
+        val dataSetAccelerometer: MutableList<ILineDataSet> = ArrayList()
+        val dataAcceleroMeter = LineData(dataSetAccelerometer)
+        dataAcceleroMeter.setDrawValues(false)
+        xPlot?.data = null
+        xPlot?.setDrawGridBackground(false)
+        xPlot?.setScaleEnabled(false)
+        xPlot?.setDrawBorders(false)
+        xPlot?.setVisibleXRangeMaximum(10f)
+        xPlot?.data = dataAcceleroMeter
+        xPlot?.legend?.isEnabled = false
+        xPlot?.description?.isEnabled = false
+        xPlot?.xAxis?.setDrawGridLines(false);
+        xPlot?.axisLeft?.setDrawGridLines(false);
+        xPlot?.axisRight?.setDrawGridLines(false);
+        xPlot?.axisLeft?.setDrawLabels(false)
+        xPlot?.axisRight?.setDrawLabels(false)
+        xPlot?.xAxis?.setDrawLabels(false)
+
+    }
+
+    private fun setupViewModel() {
+        viewModel = ViewModelProvider(
+            this,
+            SensorDataViewModelFactory()
+        ).get(SensorDataViewModel::class.java)
+
     }
 
     /**
@@ -288,18 +327,17 @@ class MainActivity : AppCompatActivity() {
 
     var pattern = " HH:mm:ss.SSS"
     var simpleDateFormat: SimpleDateFormat = SimpleDateFormat(pattern, Locale.getDefault())
-
     private fun updateUi(positionDataObject: PositionDataObject) {
         //update accelerometer
-        binding?.ax?.text = getString(R.string.ax, positionDataObject.ax)
-        binding?.ay?.text = getString(R.string.ay, positionDataObject.ay)
-        binding?.az?.text = getString(R.string.az, positionDataObject.az)
-        binding?.gx?.text = getString(R.string.gx, positionDataObject.gx)
-        binding?.gy?.text = getString(R.string.gy, positionDataObject.gy)
-        binding?.gz?.text = getString(R.string.gz, positionDataObject.gz)
-        binding?.mx?.text = getString(R.string.mx, positionDataObject.mx)
-        binding?.my?.text = getString(R.string.my, positionDataObject.my)
-        binding?.mz?.text = getString(R.string.mz, positionDataObject.mz)
+        binding?.accelerometerLayout?.x?.text = getString(R.string.ax, positionDataObject.ax)
+        binding?.accelerometerLayout?.y?.text = getString(R.string.ay, positionDataObject.ay)
+        binding?.accelerometerLayout?.z?.text = getString(R.string.az, positionDataObject.az)
+        binding?.gyroscopeLayout?.x?.text = getString(R.string.gx, positionDataObject.gx)
+        binding?.gyroscopeLayout?.y?.text = getString(R.string.gy, positionDataObject.gy)
+        binding?.gyroscopeLayout?.z?.text = getString(R.string.gz, positionDataObject.gz)
+        binding?.magnetometerLayout?.x?.text = getString(R.string.mx, positionDataObject.mx)
+        binding?.magnetometerLayout?.y?.text = getString(R.string.my, positionDataObject.my)
+        binding?.magnetometerLayout?.z?.text = getString(R.string.mz, positionDataObject.mz)
         updateHeading(positionDataObject)
         binding?.activityExit?.text = String.format(
             "%1s : %2s",
@@ -329,6 +367,60 @@ class MainActivity : AppCompatActivity() {
             getString(R.string.magnetometer_accuracy, positionDataObject?.magnetoMeterAccuracy)
         binding?.gyroscopeAccuracy?.text =
             getString(R.string.gyroscope_accuracy, positionDataObject?.gyroScopeAccuracy)
+
+        setChartData(binding?.accelerometerLayout?.xPlot, positionDataObject.ax)
+        setChartData(binding?.accelerometerLayout?.yPlot, positionDataObject.ay)
+        setChartData(binding?.accelerometerLayout?.zPlot, positionDataObject.az)
+        setChartData(binding?.magnetometerLayout?.xPlot, positionDataObject.mx)
+        setChartData(binding?.magnetometerLayout?.yPlot, positionDataObject.my)
+        setChartData(binding?.magnetometerLayout?.zPlot, positionDataObject.mz)
+        setChartData(binding?.gyroscopeLayout?.xPlot, positionDataObject.gx)
+        setChartData(binding?.gyroscopeLayout?.yPlot, positionDataObject.gy)
+        setChartData(binding?.gyroscopeLayout?.zPlot, positionDataObject.gz)
+
+    }
+
+    var count = 0
+    private fun setChartData(plot: LineChart?, ax: Float) {
+        val data = plot?.data
+        data?.let { accelerometerData ->
+            var set = accelerometerData.getDataSetByIndex(0)
+            if (set == null) {
+                set = createSet()
+                accelerometerData.addDataSet(set)
+            }
+            if (set.entryCount > 200) {
+                set.removeEntry(0)
+            }
+            val entry =
+                Entry(count.toFloat(), ax + 5)
+            accelerometerData.addEntry(
+                entry,
+                0
+            )
+            count++
+
+            accelerometerData.notifyDataChanged()
+            plot.apply {
+                notifyDataSetChanged()
+                moveViewToX(accelerometerData.entryCount.toFloat())
+            }
+        }
+    }
+
+    private fun createSet(): LineDataSet? {
+        val set = LineDataSet(null, "")
+        set.axisDependency = YAxis.AxisDependency.LEFT
+        set.lineWidth = 1f
+        val rnd = Random()
+        val color = Color.argb(255, rnd.nextInt(256), rnd.nextInt(256), rnd.nextInt(256))
+        set.color = color
+        set.isHighlightEnabled = false
+        set.setDrawValues(false)
+        set.setDrawCircles(false)
+        set.mode = LineDataSet.Mode.CUBIC_BEZIER
+        set.cubicIntensity = 0.2f
+        return set
     }
 
 
@@ -347,14 +439,55 @@ class MainActivity : AppCompatActivity() {
         binding?.imageCompass?.startAnimation(rotateAnimation)
     }
 
+    override fun onResume() {
+        super.onResume()
+        Logger.log(TAG, " in Onresume")
+        if (!mBound) {
+            Logger.log(TAG, " in Onresume setting up service")
+            setUpService()
+        }
+        setUpAllCharts()
+
+    }
+
+    private fun setUpAllCharts() {
+        count = 0
+        setUpChart(binding?.accelerometerLayout?.xPlot)
+        setUpChart(binding?.accelerometerLayout?.yPlot)
+        setUpChart(binding?.accelerometerLayout?.zPlot)
+        setUpChart(binding?.magnetometerLayout?.xPlot)
+        setUpChart(binding?.magnetometerLayout?.yPlot)
+        setUpChart(binding?.magnetometerLayout?.zPlot)
+        setUpChart(binding?.gyroscopeLayout?.xPlot)
+        setUpChart(binding?.gyroscopeLayout?.yPlot)
+        setUpChart(binding?.gyroscopeLayout?.zPlot)
+    }
+
     override fun onPause() {
         super.onPause()
-
+        Logger.log(TAG, " in onPause ")
         if (mBound) {
+            Logger.log(TAG, " in onPause unbinding service")
             unbindService(connection)
             mBound = false
         }
+        clearCharts(binding?.accelerometerLayout?.xPlot)
+        clearCharts(binding?.accelerometerLayout?.yPlot)
+        clearCharts(binding?.accelerometerLayout?.zPlot)
+        clearCharts(binding?.magnetometerLayout?.xPlot)
+        clearCharts(binding?.magnetometerLayout?.yPlot)
+        clearCharts(binding?.magnetometerLayout?.zPlot)
+        clearCharts(binding?.gyroscopeLayout?.xPlot)
+        clearCharts(binding?.gyroscopeLayout?.yPlot)
+        clearCharts(binding?.gyroscopeLayout?.zPlot)
+    }
 
+    override fun onStop() {
+        super.onStop()
+    }
+
+    private fun clearCharts(xPlot: LineChart?) {
+        xPlot?.data = null
     }
 
 
@@ -373,7 +506,7 @@ class MainActivity : AppCompatActivity() {
             } else {
                 Logger.log(TAG, "Service is already in foreground")
             }
-        } ?:Logger.log(TAG, "Service is null")
+        } ?: Logger.log(TAG, "Service is null")
 
     }
 
@@ -424,6 +557,7 @@ class MainActivity : AppCompatActivity() {
         } else {
             Toast.makeText(this, "No log files found", Toast.LENGTH_LONG).show()
         }
-
     }
+
+
 }

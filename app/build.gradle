@@ -2,6 +2,7 @@ plugins {
     id 'com.android.application'
     id 'kotlin-android'
     id "org.jetbrains.kotlin.plugin.serialization"
+    id 'kotlin-kapt'
 }
 
 android {
@@ -33,7 +34,9 @@ android {
     }
     buildFeatures {
         viewBinding true
+        dataBinding { enabled = true }
     }
+
 
 }
 
@@ -53,5 +56,5 @@ dependencies {
     implementation 'com.github.tony19:logback-android:2.0.0'
     implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.2'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.0'
-
+    implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
 }

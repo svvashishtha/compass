@@ -160,6 +160,13 @@ class MyService : Service(), SensorEventListener {
         return binder
     }
 
+    override fun onUnbind(intent: Intent?): Boolean {
+        if (!isForeGroundService) {
+            stopService()
+        }
+        return super.onUnbind(intent)
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val intentAction = intent?.action
         when (intentAction) {
@@ -198,7 +205,7 @@ class MyService : Service(), SensorEventListener {
         if (accelerometer != null) {
             sensorManager?.registerListener(
                 this, accelerometer,
-                SensorManager.SENSOR_DELAY_GAME, SensorManager.SENSOR_DELAY_UI
+                SensorManager.SENSOR_DELAY_GAME, 500000
             )
         }
 
@@ -206,14 +213,14 @@ class MyService : Service(), SensorEventListener {
         if (magneticField != null) {
             sensorManager?.registerListener(
                 this, magneticField,
-                SensorManager.SENSOR_DELAY_GAME, SensorManager.SENSOR_DELAY_UI
+                SensorManager.SENSOR_DELAY_NORMAL, 500000
             )
         }
         val gyroscopeSensor: Sensor? = sensorManager?.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         if (gyroscopeSensor != null) {
             sensorManager?.registerListener(
                 this, gyroscopeSensor,
-                SensorManager.SENSOR_DELAY_GAME, SensorManager.SENSOR_DELAY_UI
+                SensorManager.SENSOR_DELAY_GAME, 500000
             )
         }
     }
@@ -536,9 +543,9 @@ class MyService : Service(), SensorEventListener {
             mx = magnetometerReading[0],
             my = magnetometerReading[1],
             mz = magnetometerReading[2],
-            gx = magnetometerReading[0],
-            gy = magnetometerReading[1],
-            gz = magnetometerReading[2],
+            gx = gyroScopeReading[0],
+            gy = gyroScopeReading[1],
+            gz = gyroScopeReading[2],
             lastActivity = lastActivity,
             currentActivity = currentActivity,
             oldHeading = oldHeading
