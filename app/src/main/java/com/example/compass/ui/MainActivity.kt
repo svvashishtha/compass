@@ -110,6 +110,7 @@ class MainActivity : AppCompatActivity() {
         val dataSetAccelerometer: MutableList<ILineDataSet> = ArrayList()
         val dataAcceleroMeter = LineData(dataSetAccelerometer)
         dataAcceleroMeter.setDrawValues(false)
+        xPlot?.visibility = View.VISIBLE
         xPlot?.data = null
         xPlot?.setDrawGridBackground(false)
         xPlot?.setScaleEnabled(false)
@@ -446,7 +447,7 @@ class MainActivity : AppCompatActivity() {
             Logger.log(TAG, " in Onresume setting up service")
             setUpService()
         }
-        setUpAllCharts()
+//        setUpAllCharts()
 
     }
 

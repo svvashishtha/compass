@@ -34,6 +34,7 @@
         <com.github.mikephil.charting.charts.LineChart
             android:id="@+id/x_plot"
             android:layout_width="@dimen/dimen_100dp"
+            android:visibility="gone"
             android:layout_height="@dimen/dimen_100dp"
             />
 
@@ -48,6 +49,7 @@
         <com.github.mikephil.charting.charts.LineChart
             android:id="@+id/y_plot"
             android:layout_width="@dimen/dimen_100dp"
+            android:visibility="gone"
             android:layout_height="@dimen/dimen_100dp"
             />
         <TextView
@@ -61,6 +63,7 @@
         <com.github.mikephil.charting.charts.LineChart
             android:id="@+id/z_plot"
             android:layout_width="@dimen/dimen_100dp"
+            android:visibility="gone"
             android:layout_height="@dimen/dimen_100dp"
             />
     </LinearLayout>

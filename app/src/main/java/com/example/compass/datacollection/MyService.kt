@@ -200,12 +200,14 @@ class MyService : Service(), SensorEventListener {
 
     }
 
+    val samplingFrequencyRange = SensorManager.SENSOR_DELAY_GAME
+    val maxReportingFrequency = SensorManager.SENSOR_DELAY_GAME
     private fun registerAsSensorListener() {
         val accelerometer: Sensor? = sensorManager?.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
         if (accelerometer != null) {
             sensorManager?.registerListener(
                 this, accelerometer,
-                SensorManager.SENSOR_DELAY_GAME, 500000
+                samplingFrequencyRange, maxReportingFrequency
             )
         }
 
@@ -213,14 +215,14 @@ class MyService : Service(), SensorEventListener {
         if (magneticField != null) {
             sensorManager?.registerListener(
                 this, magneticField,
-                SensorManager.SENSOR_DELAY_NORMAL, 500000
+                samplingFrequencyRange, maxReportingFrequency
             )
         }
         val gyroscopeSensor: Sensor? = sensorManager?.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         if (gyroscopeSensor != null) {
             sensorManager?.registerListener(
                 this, gyroscopeSensor,
-                SensorManager.SENSOR_DELAY_GAME, 500000
+                samplingFrequencyRange, maxReportingFrequency
             )
         }
     }
